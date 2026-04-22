@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Control de Obra | Rancho Santa Rosa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --ink: #0f1923;
+            --paper: #f5f4f0;
+            --white: #ffffff;
+            --accent: #1a56db;
+            --accent2: #0e9f6e;
+            --warn: #e3a008;
+            --danger: #e02424;
+            --muted: #6b7280;
+            --border: #e5e4e0;
+            --card-bg: #ffffff;
+        }
+        * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+        body { background: var(--paper); color: var(--ink); }
+        .mono { font-family: 'DM Mono', monospace; }
+
+        /* Header */
+        .header { background: var(--ink); color: white; }
+        .header-badge { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500; }
+
+        /* Cards */
+        .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+
+        /* KPI Cards */
+        .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+        .kpi-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+        /* Gauge / Indicadores especiales */
+        .gauge-ring { stroke-dasharray: 251.2; stroke-dashoffset: 251.2; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
+        
+        /* Progress bars */
+        .pbar-track { height: 8px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+        .pbar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+        /* Semáforo */
+        .sem-rojo { background: #fee2e2; color: #991b1b; }
+        .sem-amarillo { background: #fef3c7; color: #92400e; }
+        .sem-verde { background: #d1fae5; color: #065f46; }
+        .sem-gris { background: #f3f4f6; color: #374151; }
+
+        /* Alert strip */
+        .alert-strip { background: linear-gradient(90deg, #1a56db 0%, #1e40af 100%); }
+
+        /* Timeline */
+        .timeline-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+        /* Tabla */
+        table thead tr th { background: #f9fafb; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        table tbody tr:hover { background: #f9fafb; }
+
+        /* Index badge */
+        .idx-good { background: #d1fae5; color: #065f46; }
+        .idx-warn { background: #fef3c7; color: #92400e; }
+        .idx-bad  { background: #fee2e2; color: #991b1b; }
+
+        canvas { max-height: 280px; width: 100% !important; }
+
+        /* Animaciones de entrada */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.5s ease both; }
+        .delay-1 { animation-delay: 0.05s; }
+        .delay-2 { animation-delay: 0.10s; }
+        .delay-3 { animation-delay: 0.15s; }
+        .delay-4 { animation-delay: 0.20s; }
+        .delay-5 { animation-delay: 0.25s; }
+        .delay-6 { animation-delay: 0.30s; }
+
+        /* Scroll */
+        .table-scroll { overflow-x: auto; }
+
+        /* Earned Value colors */
+        .ev-cpi-good { color: #065f46; }
+        .ev-cpi-warn { color: #92400e; }
+        .ev-cpi-bad { color: #991b1b; }
+
+        /* Flujo de caja */
+        .flujo-positivo { color: #065f46; }
+        .flujo-negativo { color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════════ HEADER ═══════════════════ -->
+    <div class="header sticky top-0 z-20 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-4">
+                <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 10px; display:flex; align-items:center; justify-content:center;">
+                    <img src="data:image/png;base64,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" alt="Paredes y Asociados" style="height:44px;object-fit:contain;" />
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white leading-tight">Control de Obra · Rancho Santa Rosa</h1>
+                    <p class="text-xs" style="color:rgba(255,255,255,0.6);">Facultad de Veterinaria · CADELS · Estimación 3</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <span class="header-badge"><i class="fas fa-calendar-check mr-1"></i>Corte: 21 Abr 2026</span>
+                <span class="header-badge"><i class="fas fa-file-invoice-dollar mr-1"></i>Estimación 3</span>
+                <span class="header-badge" id="badgeDias"></span>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
+
+        <!-- ═══════════════════ ALERT BANNER ═══════════════════ -->
+        <div class="alert-strip rounded-2xl px-5 py-3 mb-6 flex flex-wrap items-center gap-3 fade-up">
+            <i class="fas fa-info-circle text-white text-lg"></i>
+            <span class="text-white text-sm font-medium">Gasto real <strong id="alertPct">--</strong> del presupuesto · Flujo de caja positivo de <strong id="alertFlujo">--</strong> · SPI = <strong id="alertSPI">--</strong></span>
+        </div>
+
+        <!-- ═══════════════════ KPIs FILA 1 ═══════════════════ -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+
+            <div class="card card-hover p-5 fade-up delay-1">
+                <div class="kpi-label mb-2"><i class="fas fa-chart-pie mr-1 text-blue-500"></i>Presupuesto Total</div>
+                <div class="kpi-value text-blue-700 mono" id="kpiPres">--</div>
+                <div class="text-xs text-gray-400 mt-2">Contrato + adicionales (con IVA)</div>
+                <div class="mt-3 pbar-track"><div class="pbar-fill bg-blue-500" id="barPres" style="width:100%"></div></div>
+            </div>
+
+            <div class="card card-hover p-5 fade-up delay-2">
+                <div class="kpi-label mb-2"><i class="fas fa-dollar-sign mr-1 text-gray-500"></i>Gasto Acumulado</div>
+                <div class="kpi-value text-gray-500 mono" id="kpiGasto">--</div>
+                <div class="text-xs text-gray-400 mt-2">Erogado real al corte</div>
+                <div class="mt-3 pbar-track"><div class="pbar-fill bg-gray-500" id="barGasto" style="width:0%"></div></div>
+            </div>
+
+            <div class="card card-hover p-5 fade-up delay-3">
+                <div class="kpi-label mb-2"><i class="fas fa-hand-holding-usd mr-1 text-amber-500"></i>Pagos Recibidos</div>
+                <div class="kpi-value text-amber-600 mono" id="kpiPagado">--</div>
+                <div class="text-xs text-gray-400 mt-2">Anticipos + 3 estimaciones</div>
+                <div class="mt-3 pbar-track"><div class="pbar-fill bg-amber-400" id="barPagado" style="width:0%"></div></div>
+            </div>
+
+            <div class="card card-hover p-5 fade-up delay-4">
+                <div class="kpi-label mb-2"><i class="fas fa-balance-scale mr-1 text-emerald-500"></i>Saldo Caja</div>
+                <div class="kpi-value mono" id="kpiFlujo">--</div>
+                <div class="text-xs text-gray-400 mt-2" id="kpiFlujoTxt">Pagado menos gasto real</div>
+                <div class="mt-3 pbar-track"><div class="pbar-fill bg-emerald-400" id="barFlujo" style="width:0%"></div></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ KPIs FILA 2 — INDICADORES AVANZADOS ═══════════════════ -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+            <div class="card card-hover p-5 fade-up delay-1 flex flex-col items-center text-center">
+                <div class="kpi-label mb-3"><i class="fas fa-tasks mr-1 text-indigo-500"></i>Avance Físico global</div>
+                <div class="relative w-28 h-28">
+                    <svg viewBox="0 0 90 90" class="w-full h-full -rotate-90">
+                        <circle cx="45" cy="45" r="40" fill="none" stroke="#e5e7eb" stroke-width="9"/>
+                        <circle id="gaugeAF" cx="45" cy="45" r="40" fill="none" stroke="#6366f1" stroke-width="9"
+                            stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"
+                            style="transition: stroke-dashoffset 1.3s ease"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-xl font-bold mono text-indigo-700" id="gaugeAFLabel">--%</span>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400 mt-2">Ponderado por presupuesto</div>
+            </div>
+
+            <div class="card card-hover p-5 fade-up delay-2">
+                <div class="kpi-label mb-2"><i class="fas fa-coins mr-1 text-purple-500"></i>CPI — Costo</div>
+                <div class="kpi-value mono" id="kpiCPI">--</div>
+                <div class="text-xs mt-1 font-medium" id="kpiCPIText">Índice de eficiencia de costo</div>
+                <div class="text-xs text-gray-400 mt-2">Valor ganado / Gasto real</div>
+                <div class="mt-2 text-xs rounded-full px-2 py-0.5 inline-block" id="badgeCPI">–</div>
+            </div>
+
+            <div class="card card-hover p-5 fade-up delay-3">
+                <div class="kpi-label mb-2"><i class="fas fa-stopwatch mr-1 text-sky-500"></i>SPI — Plazo</div>
+                <div class="kpi-value mono" id="kpiSPI">--</div>
+                <div class="text-xs mt-1 font-medium" id="kpiSPIText">Índice de eficiencia de plazo</div>
+                <div class="text-xs text-gray-400 mt-2">Valor ganado / Presupuesto planif.</div>
+                <div class="mt-2 text-xs rounded-full px-2 py-0.5 inline-block" id="badgeSPI">–</div>
+            </div>
+
+            <div class="card card-hover p-5 fade-up delay-4">
+                <div class="kpi-label mb-2"><i class="fas fa-clock mr-1 text-teal-500"></i>Días de Obra</div>
+                <div class="kpi-value text-teal-700 mono" id="kpiDias">--</div>
+                <div class="text-xs text-gray-400 mt-2" id="kpiDiasSub">Desde inicio del contrato</div>
+                <div class="mt-3 pbar-track"><div class="pbar-fill bg-teal-400" id="barDias" style="width:0%"></div></div>
+                <div class="text-xs text-gray-400 mt-1" id="kpiDiasResta"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ CURVA S — FILA COMPLETA ═══════════════════ -->
+        <div class="grid grid-cols-1 gap-5 mb-6">
+            <div class="card p-5 fade-up">
+                <h2 class="font-semibold text-gray-700 mb-3"><i class="fas fa-chart-line text-purple-500 mr-2"></i>Curva S — Gasto acumulado</h2>
+                <canvas id="lineChart" style="height:260px"></canvas>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ GRÁFICA DE BARRAS (ANCHO COMPLETO) ═══════════════════ -->
+        <div class="grid grid-cols-1 gap-5 mb-6">
+            <div class="card p-5 fade-up">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-semibold text-gray-700"><i class="fas fa-chart-bar text-blue-500 mr-2"></i>Avance físico vs Gasto por partida</h2>
+                </div>
+                <canvas id="barChart" style="height:300px"></canvas>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ ESPACIO LIBRE: DONA + FLUJO DE PAGOS ═══════════════════ -->
+        <div class="grid md:grid-cols-2 gap-5 mb-6">
+            <!-- Gráfica de dona (gasto por tipo) -->
+            <div class="card p-5 fade-up">
+                <h2 class="font-semibold text-gray-700 mb-4"><i class="fas fa-chart-pie text-emerald-600 mr-2"></i>Gasto por tipo</h2>
+                <canvas id="pieChart" style="height:240px"></canvas>
+                <div id="pieLegendsCustom" class="mt-3 space-y-1.5 text-xs"></div>
+            </div>
+
+            <!-- Flujo de pagos y estimaciones -->
+            <div class="card p-5 fade-up delay-1">
+                <h2 class="font-semibold text-gray-700 mb-3"><i class="fas fa-coins text-yellow-600 mr-2"></i>Flujo de Pagos y Estimaciones</h2>
+                <div class="space-y-2 text-sm" id="flujoList"></div>
+                <div class="mt-4 rounded-xl p-3 border" id="flujoBanner"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ TABLA DETALLADA ═══════════════════ -->
+        <div class="card overflow-hidden mb-6 fade-up">
+            <div class="px-6 py-4 border-b bg-gray-50/60 flex justify-between items-center">
+                <div>
+                    <h2 class="font-semibold text-gray-800"><i class="fas fa-table-list text-indigo-500 mr-2"></i>Resumen Detallado por Partida</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Presupuesto · Gasto real · Avance físico · EVM · Estado</p>
+                </div>
+                <div class="flex gap-2 text-xs">
+                    <span class="sem-verde px-2 py-0.5 rounded-full font-medium">Terminado</span>
+                    <span class="sem-amarillo px-2 py-0.5 rounded-full font-medium">En progreso</span>
+                    <span class="sem-rojo px-2 py-0.5 rounded-full font-medium">Alerta</span>
+                    <span class="sem-gris px-2 py-0.5 rounded-full font-medium">Sin inicio</span>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table class="min-w-full divide-y divide-gray-100 text-sm">
+                    <thead>
+                        <tr><th class="px-5 py-3 text-left">Partida</th><th class="px-5 py-3 text-right">Presupuesto</th><th class="px-5 py-3 text-right">Gastado</th><th class="px-5 py-3 text-right">Avance Fís.</th><th class="px-5 py-3 text-right">Ejecutado</th><th class="px-5 py-3 text-right">Desviación</th><th class="px-5 py-3 text-center">CPI</th><th class="px-5 py-3 text-center">Semáforo</th></tr>
+                    </thead>
+                    <tbody id="tablaBody" class="divide-y divide-gray-100"></tbody>
+                    <tfoot id="tablaFooter" class="border-t-2 border-gray-300 bg-gray-50 font-semibold"></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════════════ PANEL EVM DETALLE ═══════════════════ -->
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="card p-5 fade-up text-center"><div class="kpi-label mb-2"><i class="fas fa-bullseye mr-1"></i>Valor Planificado (PV)</div><div class="kpi-value mono text-gray-700" id="evmPV">--</div><div class="text-xs text-gray-400 mt-1">Presupuesto planificado al corte</div></div>
+            <div class="card p-5 fade-up delay-1 text-center"><div class="kpi-label mb-2"><i class="fas fa-chart-area mr-1 text-indigo-500"></i>Ejecutado (EV)</div><div class="kpi-value mono text-indigo-600" id="evmEV">--</div><div class="text-xs text-gray-400 mt-1">Trabajo real ejecutado a precio contrato</div></div>
+            <div class="card p-5 fade-up delay-2 text-center"><div class="kpi-label mb-2"><i class="fas fa-calculator mr-1 text-red-500"></i>Gasto Real (AC)</div><div class="kpi-value mono text-red-600" id="evmAC">--</div><div class="text-xs text-gray-400 mt-1">Costo real incurrido al corte</div></div>
+        </div>
+
+        <!-- ═══════════════════ RESUMEN VARIANCIAS EVM + ALERTAS ═══════════════════ -->
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div class="card p-5 fade-up">
+                <h3 class="font-semibold text-gray-700 mb-4"><i class="fas fa-wave-square text-purple-500 mr-2"></i>Análisis de Valor Ganado (EVM)</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center py-2 border-b"><span class="text-gray-600">Variación de Costo (CV = EV − AC)</span><span class="font-bold mono" id="evmCV">--</span></div>
+                    <div class="flex justify-between items-center py-2 border-b"><span class="text-gray-600">Variación de Plazo (SV = EV − PV)</span><span class="font-bold mono" id="evmSV">--</span></div>
+                    <div class="flex justify-between items-center py-2 border-b"><span class="text-gray-600">Índice Costo (CPI = EV/AC)</span><span class="font-bold mono" id="evmCPIb">--</span></div>
+                    <div class="flex justify-between items-center py-2"><span class="text-gray-600">Índice Plazo (SPI = EV/PV)</span><span class="font-bold mono" id="evmSPIb">--</span></div>
+                </div>
+            </div>
+            <div class="card p-5 fade-up delay-1">
+                <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i>Alertas por Partida</h3>
+                <div id="alertasPartidas" class="space-y-2 text-sm"></div>
+            </div>
+        </div>
+
+        <div class="text-xs text-center text-gray-400 border-t pt-4 pb-2">
+            <i class="fas fa-database mr-1"></i> Datos basados en BASE DE DATOS y estimación de obra · Corte informativo 21 Abr 2026
+            &nbsp;·&nbsp; <i class="fas fa-code mr-1"></i> Dashboard V2.01
+        </div>
+    </main>
+
+<script>
+(function() {
+    const INICIO_CONTRATO = new Date('2025-11-07');
+    const CORTE = new Date('2026-04-21');
+    const PLAZO_DIAS = 469;
+
+    const partidas = [
+        { nombre: "MEJORAMIENTO DE TERRENO",   presupuesto: 3741540.86,  gastado: 1618034.43,  avanceFisico: 1.00 },
+        { nombre: "CIMENTACIÓN",               presupuesto: 9205273.81,  gastado: 9624736.13,  avanceFisico: 1.00 },
+        { nombre: "ESTRUCTURA",                presupuesto: 19689751.20, gastado: 11171149.59,  avanceFisico: 0.5718 },
+        { nombre: "ALBAÑILERÍA",               presupuesto: 7352953.24,  gastado: 234816.56,   avanceFisico: 0.2129 },
+        { nombre: "AZOTEA",                    presupuesto: 2956477.80,  gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "ACABADOS",                  presupuesto: 10406582.52, gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "INST. ELÉCTRICA",           presupuesto: 4586028.61,  gastado: 3833.80,     avanceFisico: 0.00 },
+        { nombre: "INST. HIDRÁULICA/SANITARIA",presupuesto: 2174274.41,  gastado: 10925.73,    avanceFisico: 0.0335 },
+        { nombre: "MUEBLES DE BAÑO",           presupuesto: 1165709.43,  gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "CANCELERÍA ALUMINIO",       presupuesto: 3177963.55,  gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "CARPINTERÍA",               presupuesto: 34412.51,    gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "HERRERÍA",                  presupuesto: 122116.78,   gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "MAMPARAS BAÑO",             presupuesto: 516790.35,   gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "CANALIZACIÓN VOZ/DATOS",    presupuesto: 981748.34,   gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "LIMPIEZAS",                 presupuesto: 372224.15,   gastado: 19268.18,    avanceFisico: 0.3451 },
+        { nombre: "BODEGA / OTROS",            presupuesto: 0,           gastado: 1098559.36,  avanceFisico: 1.00 }
+    ];
+
+    const pagos = [
+        { fecha: '07-Feb-25', concepto: '1er Pago Anticipo',   monto: 4500237.05 },
+        { fecha: '07-Nov-25', concepto: '1er Complemento',     monto: 8520100.00 },
+        { fecha: '15-Ene-26', concepto: '2do Complemento',     monto: 6553347.46 },
+        { fecha: '09-Feb-26', concepto: '1ª Estimación',       monto: 7772898.79 },
+        { fecha: '26-Mar-26', concepto: '2ª Estimación',       monto: 4135338.51 },
+        { fecha: '17-Abr-26', concepto: '3ª Estimación',       monto: 4530200.15 },
+    ];
+
+    const gastoTipo = {
+        'Materiales':   112624.01 + 5781602.74 + 6009964.12 + 3833.80 + 231888,
+        'Mano de Obra': 344461.42 + 1922715.30 + 1800521.78 + 126570.01 + 306676.32,
+        'Indirectos':   386280.66 + 429962.92 + 1525198.34 + 155394.63 + 243300,
+        'Equipo':       95146.10 + 213437.21 + 141421.11 + 34730.40,
+        'Herramienta':  14518 + 5254.28
+    };
+
+    const periodos       = ['13/12','27/10','04/11','12/11','20/11','28/11','06/12','14/12','22/12','30/12','07/01','15/01','23/01','31/01','08/02','16/02','24/02','04/03','12/03','20/03','28/03','05/04',' 13/04'];
+    const gastoAcum      = [1156326.53, 1446397.47, 1758748.80, 2974562.40, 3163910.75, 3498108.91, 3802794.99, 5856564.45, 6139943.32, 6313283.58, 6927820.11, 9172975.33, 10847903.48, 12408837.54, 14665355.53, 15376137.58, 16519557.71, 18382198.83, 19238716.74, 20916925.97, 21415907.50, 21937745.1,23781323.78];
+    const presupuestoAcum= [0,0,0,0,0,0,40614,938879,2655068,5124517,6196871,7491868,9421613,13013506,13553083,14667320,16087155,18040237,20257734,22614164,25715825,28929389,32005450.30];
+    const estimadoAcum   = [0,1127512,2255025,3382538,4510051,5637564,6765077,7892590,9020102,10147615,11275128,12402641,13530154,14657667,15785180,16912693,18040205,19167718,21547186,23096903,24635943,25972150.90,25972150.90];
+    const pagadoAcum     = [4500237,4500237,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,19573684,19573684,19573684,27346583,27346583,27346583,27346583,27346583,31481921,31481921,31481921,36012121.96];
+
+    const totalPres = partidas.reduce((s,p) => s + p.presupuesto, 0);
+    const totalGasto = partidas.reduce((s,p) => s + p.gastado, 0);
+    const totalPagado = pagos.reduce((s,p) => s + p.monto, 0);
+    const saldoCaja = totalPagado - totalGasto;
+    const avanceFisicoGlobal = partidas.reduce((s,p) => s + (p.avanceFisico * p.presupuesto), 0) / totalPres;
+    const EV = partidas.reduce((s,p) => s + (p.avanceFisico * p.presupuesto), 0);
+    const AC = totalGasto;
+    const PV = presupuestoAcum[presupuestoAcum.length - 1];
+    const CPI = AC > 0 ? EV / AC : null;
+    const SPI = PV > 0 ? EV / PV : null;
+    const CV = EV - AC;
+    const SV = EV - PV;
+    const diasTranscurridos = Math.floor((CORTE - INICIO_CONTRATO) / (1000*60*60*24));
+    const diasRestantes = PLAZO_DIAS - diasTranscurridos;
+    const pctDias = Math.min(diasTranscurridos / PLAZO_DIAS * 100, 100);
+
+    const fmtM = v => `$${(v/1e6).toFixed(2)} M`;
+    const fmtN = v => `$${v.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0})}`;
+    const fmtIdx = v => v !== null ? v.toFixed(3) : 'N/A';
+
+    document.getElementById('kpiPres').innerText = fmtM(totalPres);
+    document.getElementById('kpiGasto').innerText = fmtM(totalGasto);
+    document.getElementById('kpiPagado').innerText = fmtM(totalPagado);
+    const flujoEl = document.getElementById('kpiFlujo');
+    flujoEl.innerText = fmtM(Math.abs(saldoCaja));
+    flujoEl.className = 'kpi-value mono ' + (saldoCaja >= 0 ? 'text-emerald-600' : 'text-red-600');
+    document.getElementById('kpiFlujoTxt').innerText = saldoCaja >= 0 ? '▲ Saldo positivo (pagado > gasto)' : '▼ Saldo negativo (gasto > pagado)';
+    document.getElementById('barGasto').style.width = `${(totalGasto/totalPres*100).toFixed(1)}%`;
+    document.getElementById('barPagado').style.width = `${Math.min(totalPagado/totalPres*100, 100).toFixed(1)}%`;
+    document.getElementById('barFlujo').style.width = `${Math.min(Math.abs(saldoCaja)/totalPres*100, 100).toFixed(1)}%`;
+
+    const circumference = 251.2;
+    const offset = circumference - (avanceFisicoGlobal * circumference);
+    setTimeout(() => { document.getElementById('gaugeAF').style.strokeDashoffset = offset; }, 200);
+    document.getElementById('gaugeAFLabel').innerText = `${(avanceFisicoGlobal*100).toFixed(1)}%`;
+
+    // CPI & SPI
+    const cpiEl = document.getElementById('kpiCPI');
+    const cpiTxt = document.getElementById('kpiCPIText');
+    const cpiBadge = document.getElementById('badgeCPI');
+    if (CPI !== null) {
+        cpiEl.innerText = fmtIdx(CPI);
+        if (CPI >= 1) { cpiEl.className = 'kpi-value mono ev-cpi-good'; cpiTxt.innerText = '✔ Bajo costo — eficiente'; cpiBadge.className = 'mt-2 text-xs rounded-full px-2 py-0.5 inline-block idx-good'; cpiBadge.innerText = 'Favorable'; }
+        else if (CPI >= 0.8) { cpiEl.className = 'kpi-value mono ev-cpi-warn'; cpiTxt.innerText = '⚠ Ligera sobrejecución'; cpiBadge.className = 'mt-2 text-xs rounded-full px-2 py-0.5 inline-block idx-warn'; cpiBadge.innerText = 'Atención'; }
+        else { cpiEl.className = 'kpi-value mono ev-cpi-bad'; cpiTxt.innerText = '✖ Sobrecosto significativo'; cpiBadge.className = 'mt-2 text-xs rounded-full px-2 py-0.5 inline-block idx-bad'; cpiBadge.innerText = 'Alerta'; }
+    }
+    const spiEl = document.getElementById('kpiSPI');
+    const spiTxt = document.getElementById('kpiSPIText');
+    const spiBadge = document.getElementById('badgeSPI');
+    if (SPI !== null) {
+        spiEl.innerText = fmtIdx(SPI);
+        if (SPI >= 1) { spiEl.className = 'kpi-value mono ev-cpi-good'; spiTxt.innerText = '✔ Adelantado al plan'; spiBadge.className = 'mt-2 text-xs rounded-full px-2 py-0.5 inline-block idx-good'; spiBadge.innerText = 'Adelantado'; }
+        else if (SPI >= 0.8) { spiEl.className = 'kpi-value mono ev-cpi-warn'; spiTxt.innerText = '⚠ Ligero retraso'; spiBadge.className = 'mt-2 text-xs rounded-full px-2 py-0.5 inline-block idx-warn'; spiBadge.innerText = 'Retraso leve'; }
+        else { spiEl.className = 'kpi-value mono ev-cpi-bad'; spiTxt.innerText = '✖ Retraso significativo'; spiBadge.className = 'mt-2 text-xs rounded-full px-2 py-0.5 inline-block idx-bad'; spiBadge.innerText = 'Retraso'; }
+    }
+    document.getElementById('kpiDias').innerText = `${diasTranscurridos} días`;
+    document.getElementById('kpiDiasSub').innerText = `De ${PLAZO_DIAS} días de contrato`;
+    document.getElementById('barDias').style.width = `${pctDias.toFixed(1)}%`;
+    document.getElementById('kpiDiasResta').innerText = diasRestantes > 0 ? `Restan ~${diasRestantes} días` : `Plazo vencido hace ${Math.abs(diasRestantes)} días`;
+    document.getElementById('badgeDias').innerHTML = `<i class="fas fa-clock mr-1"></i>${diasTranscurridos} días de obra`;
+    document.getElementById('alertPct').innerText = `${(totalGasto/totalPres*100).toFixed(1)}%`;
+    document.getElementById('alertFlujo').innerText = fmtM(saldoCaja);
+    document.getElementById('alertSPI').innerText = SPI !== null ? fmtIdx(SPI) : 'N/A';
+    document.getElementById('evmPV').innerText = fmtM(PV);
+    document.getElementById('evmEV').innerText = fmtM(EV);
+    document.getElementById('evmAC').innerText = fmtM(AC);
+    const cvEl = document.getElementById('evmCV'); cvEl.innerText = fmtM(CV); cvEl.className = 'font-bold mono ' + (CV >= 0 ? 'flujo-positivo' : 'flujo-negativo');
+    const svEl = document.getElementById('evmSV'); svEl.innerText = fmtM(SV); svEl.className = 'font-bold mono ' + (SV >= 0 ? 'flujo-positivo' : 'flujo-negativo');
+    document.getElementById('evmCPIb').innerText = CPI !== null ? fmtIdx(CPI) : 'N/A';
+    document.getElementById('evmSPIb').innerText = SPI !== null ? fmtIdx(SPI) : 'N/A';
+
+    // Tabla
+    const tbody = document.getElementById('tablaBody');
+    partidas.forEach(p => {
+        const ev_p = p.avanceFisico * p.presupuesto;
+        const cpi_p = p.gastado > 0 ? ev_p / p.gastado : null;
+        const desv = ev_p - p.gastado;
+        const af = p.avanceFisico * 100;
+        let semClass, semText;
+        if (af === 0 && p.gastado === 0) { semClass = 'sem-gris'; semText = 'Sin inicio'; }
+        else if (af >= 95) { semClass = 'sem-verde'; semText = '✔ Terminado'; }
+        else if (p.gastado > p.presupuesto && p.presupuesto > 0) { semClass = 'sem-rojo'; semText = '✖ Sobrecosto'; }
+        else if (af < 30) { semClass = 'sem-amarillo'; semText = '◐ En progreso'; }
+        else { semClass = 'sem-amarillo'; semText = '◑ Ejecutándose'; }
+        let cpiClass = '', cpiStr = '—';
+        if (cpi_p !== null) { cpiStr = cpi_p.toFixed(2); if (cpi_p >= 1) cpiClass = 'idx-good'; else if (cpi_p >= 0.7) cpiClass = 'idx-warn'; else cpiClass = 'idx-bad'; }
+        tbody.insertAdjacentHTML('beforeend', `<tr><td class="px-5 py-3 font-medium text-gray-800">${p.nombre}</td><td class="px-5 py-3 text-right mono text-gray-600">$${p.presupuesto.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-right mono text-gray-600">$${p.gastado.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-right font-semibold"><div class="inline-flex items-center gap-2"><div class="w-16 pbar-track"><div class="pbar-fill ${af >= 95 ? 'bg-emerald-500' : af > 0 ? 'bg-blue-500' : 'bg-gray-300'}" style="width:${af.toFixed(1)}%"></div></div><span class="mono text-xs">${af.toFixed(1)}%</span></div></td><td class="px-5 py-3 text-right mono text-indigo-700">$${ev_p.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-right mono font-semibold ${desv >= 0 ? 'flujo-positivo' : 'flujo-negativo'}">$${desv.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-center"><span class="text-xs rounded-full px-2 py-0.5 font-medium ${cpiClass}">${cpiStr}</span></td><td class="px-5 py-3 text-center"><span class="text-xs rounded-full px-2 py-1 font-medium ${semClass}">${semText}</span></td></tr>`);
+    });
+    const totalEV = EV, totalDesv = totalEV - totalGasto;
+    document.getElementById('tablaFooter').innerHTML = `<tr><td class="px-5 py-3 font-bold">TOTALES</td><td class="px-5 py-3 text-right mono">$${totalPres.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-right mono">$${totalGasto.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-right mono">${(avanceFisicoGlobal*100).toFixed(1)}%</td><td class="px-5 py-3 text-right mono text-indigo-700">$${totalEV.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-right mono font-bold ${totalDesv >= 0 ? 'flujo-positivo' : 'flujo-negativo'}">$${totalDesv.toLocaleString('en-US', {minimumFractionDigits:0})}</td><td class="px-5 py-3 text-center mono font-bold">${CPI !== null ? fmtIdx(CPI) : '–'}</td><td class="px-5 py-3"></td></tr>`;
+
+    // Flujo de pagos
+    const flujoList = document.getElementById('flujoList');
+    const colors = ['bg-blue-500','bg-blue-400','bg-indigo-500','bg-purple-500','bg-violet-500'];
+    pagos.forEach((p, i) => { flujoList.insertAdjacentHTML('beforeend', `<div class="flex items-center justify-between border-b pb-2 last:border-0"><div class="flex items-center gap-2"><div class="timeline-dot ${colors[i] || 'bg-gray-400'}"></div><div><div class="font-medium text-gray-700">${p.concepto}</div><div class="text-xs text-gray-400">${p.fecha}</div></div></div><span class="mono font-semibold">${fmtN(p.monto)}</span></div>`); });
+    document.getElementById('flujoBanner').innerHTML = `<div class="flex justify-between items-center"><div><div class="text-xs font-bold text-gray-600 uppercase tracking-wide">Total Recibido</div><div class="text-xl font-bold mono text-emerald-700">${fmtN(totalPagado)}</div></div><div class="text-right"><div class="text-xs font-bold text-gray-600 uppercase tracking-wide">Saldo vs Gasto</div><div class="text-xl font-bold mono ${saldoCaja >= 0 ? 'text-emerald-600' : 'text-red-600'}">${saldoCaja >= 0 ? '+' : ''}${fmtN(saldoCaja)}</div></div></div>`;
+
+    // Alertas
+    const alertDiv = document.getElementById('alertasPartidas');
+    const alertas = [];
+    partidas.forEach(p => { if (p.presupuesto > 0 && p.gastado > p.presupuesto) alertas.push({ tipo: 'rojo', msg: `${p.nombre}: sobrepasa presupuesto en $${((p.gastado - p.presupuesto)/1000).toFixed(0)}K` }); else if (p.avanceFisico > 0 && p.gastado === 0 && p.presupuesto > 0) alertas.push({ tipo: 'amarillo', msg: `${p.nombre}: avance físico sin gasto registrado` }); else if (p.gastado > 0 && p.avanceFisico === 0 && p.presupuesto > 0) alertas.push({ tipo: 'amarillo', msg: `${p.nombre}: gasto registrado sin avance físico` }); });
+    if (CPI !== null && CPI < 0.9) alertas.push({ tipo: 'rojo', msg: `CPI global ${fmtIdx(CPI)} — costo sobre lo planificado` });
+    if (SPI !== null && SPI < 0.9) alertas.push({ tipo: 'amarillo', msg: `SPI global ${fmtIdx(SPI)} — posible retraso de programa` });
+    if (alertas.length === 0) alertDiv.innerHTML = `<div class="sem-verde rounded-lg px-3 py-3 text-sm font-medium">✔ Sin alertas críticas al corte</div>`;
+    else alertas.forEach(a => { alertDiv.insertAdjacentHTML('beforeend', `<div class="${a.tipo === 'rojo' ? 'sem-rojo' : 'sem-amarillo'} rounded-lg px-3 py-2 text-xs font-medium flex items-center gap-2"><i class="fas fa-${a.tipo === 'rojo' ? 'circle-exclamation' : 'triangle-exclamation'}"></i>${a.msg}</div>`); });
+
+    // Gráficos
+    const top = partidas.filter(p => p.presupuesto > 0);
+    const labelsBar = top.map(p => p.nombre.length > 16 ? p.nombre.substring(0,14)+'..' : p.nombre);
+    new Chart(document.getElementById('barChart').getContext('2d'), { type: 'bar', data: { labels: labelsBar, datasets: [{ label: 'Avance físico (%)', data: top.map(p => +(p.avanceFisico*100).toFixed(1)), backgroundColor: 'rgba(99,102,241,0.85)', borderRadius: 5, yAxisID: 'y' }, { label: 'Gasto / Ppto (%)', data: top.map(p => p.presupuesto > 0 ? +(p.gastado/p.presupuesto*100).toFixed(1) : 0), backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 5, yAxisID: 'y' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { max: 120, title: { display: true, text: 'Porcentaje (%)' }, ticks: { callback: v => v+'%' } } } } });
+    const pieColors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899'];
+    new Chart(document.getElementById('pieChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(gastoTipo), datasets: [{ data: Object.values(gastoTipo), backgroundColor: pieColors, borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: $${ctx.raw.toLocaleString('en-US', {maximumFractionDigits:0})}` } } } } });
+    const pieTotal = Object.values(gastoTipo).reduce((a,b) => a+b, 0);
+    const pieLeg = document.getElementById('pieLegendsCustom');
+    Object.entries(gastoTipo).forEach(([k,v], i) => { pieLeg.insertAdjacentHTML('beforeend', `<div class="flex items-center justify-between"><div class="flex items-center gap-2"><div style="background:${pieColors[i]};width:10px;height:10px;border-radius:2px;flex-shrink:0"></div><span>${k}</span></div><span class="mono text-gray-500">${(v/pieTotal*100).toFixed(1)}%</span></div>`); });
+    new Chart(document.getElementById('lineChart').getContext('2d'), { type: 'line', data: { labels: periodos, datasets: [{ label: 'Gastado', data: gastoAcum, borderColor: '#8b5cf6', backgroundColor:'rgba(139,92,246,0.06)', borderWidth:2.5, fill:true, tension:0.3, pointRadius:2 }, { label: 'Programa', data: presupuestoAcum, borderColor: '#10b981', backgroundColor:'rgba(16,185,129,0.05)', borderWidth:2, fill:true, tension:0.3, pointRadius:2, borderDash:[5,3] }, { label: 'Avance', data: estimadoAcum, borderColor: '#f59e0b', backgroundColor:'rgba(245,158,11,0.05)', borderWidth:2, fill:true, tension:0.3, pointRadius:2, borderDash:[3,3] }, { label: 'Pagado', data: pagadoAcum, borderColor: '#ef4444', backgroundColor:'rgba(239,68,68,0.04)', borderWidth:2, fill:false, tension:0.3, pointRadius:2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } }, scales: { y: { ticks: { callback: v => `$${(v/1e6).toFixed(1)}M` }, title: { display: true, text: 'Millones MXN' } }, x: { ticks: { font: { size: 10 } } } } } });
+})();
+</script>
+</body>
+</html>
