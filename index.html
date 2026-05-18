@@ -102,12 +102,12 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white leading-tight">Control de Obra · Rancho Santa Rosa</h1>
-                    <p class="text-xs" style="color:rgba(255,255,255,0.6);">Facultad de Veterinaria · CADELS · Estimación 3</p>
+                    <p class="text-xs" style="color:rgba(255,255,255,0.6);">Facultad de Veterinaria · CADELS · Estimación 4</p>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2">
-                <span class="header-badge"><i class="fas fa-calendar-check mr-1"></i>Corte: 21 Abr 2026</span>
-                <span class="header-badge"><i class="fas fa-file-invoice-dollar mr-1"></i>Estimación 3</span>
+                <span class="header-badge"><i class="fas fa-calendar-check mr-1"></i>Corte: 15 MAy 2026</span>
+                <span class="header-badge"><i class="fas fa-file-invoice-dollar mr-1"></i>Estimación 4</span>
                 <span class="header-badge" id="badgeDias"></span>
             </div>
         </div>
@@ -282,7 +282,7 @@
         </div>
 
         <div class="text-xs text-center text-gray-400 border-t pt-4 pb-2">
-            <i class="fas fa-database mr-1"></i> Datos basados en BASE DE DATOS y estimación de obra · Corte informativo 21 Abr 2026
+            <i class="fas fa-database mr-1"></i> Datos basados en BASE DE DATOS y estimación de obra · Corte informativo 15 May 2026
             &nbsp;·&nbsp; <i class="fas fa-code mr-1"></i> Dashboard V2.01
         </div>
     </main>
@@ -296,10 +296,10 @@
     const partidas = [
         { nombre: "MEJORAMIENTO DE TERRENO",   presupuesto: 3741540.86,  gastado: 1618034.43,  avanceFisico: 1.00 },
         { nombre: "CIMENTACIÓN",               presupuesto: 9205273.81,  gastado: 9624736.13,  avanceFisico: 1.00 },
-        { nombre: "ESTRUCTURA",                presupuesto: 19689751.20, gastado: 11330931.92,  avanceFisico: 0.6259 },
-        { nombre: "ALBAÑILERÍA",               presupuesto: 7352953.24,  gastado: 315551.99,   avanceFisico: 0.2861 },
-        { nombre: "AZOTEA",                    presupuesto: 2956477.80,  gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "ACABADOS",                  presupuesto: 10406582.52, gastado: 0,           avanceFisico: 0.00 },
+        { nombre: "ESTRUCTURA",                presupuesto: 19689751.20, gastado: 13325055.46,  avanceFisico: 0.785 },
+        { nombre: "ALBAÑILERÍA",               presupuesto: 7352953.24,  gastado: 422647.75,   avanceFisico: 0.3832 },
+        { nombre: "AZOTEA",                    presupuesto: 2956477.80,  gastado: 6164.26,     avanceFisico: 0.0139 },
+        { nombre: "ACABADOS",                  presupuesto: 10406582.52, gastado: 397263.77,   avanceFisico: 0.1350 },
         { nombre: "INST. ELÉCTRICA",           presupuesto: 4586028.61,  gastado: 3833.80,     avanceFisico: 0.00 },
         { nombre: "INST. HIDRÁULICA/SANITARIA",presupuesto: 2174274.41,  gastado: 10925.73,    avanceFisico: 0.0335 },
         { nombre: "MUEBLES DE BAÑO",           presupuesto: 1165709.43,  gastado: 0,           avanceFisico: 0.00 },
@@ -317,24 +317,24 @@
         { fecha: '07-Nov-25', concepto: '1er Complemento',     monto: 8520100.00 },
         { fecha: '15-Ene-26', concepto: '2do Complemento',     monto: 6553347.46 },
         { fecha: '09-Feb-26', concepto: '1ª Estimación',       monto: 7772898.79 },
-        { fecha: '26-Mar-26', concepto: '2ª Estimación',       monto: 4135338.51 },
-        { fecha: '17-Abr-26', concepto: '3ª Estimación',       monto: 4530200.15 },
+        { fecha: '06-Mar-26', concepto: '2ª Estimación',       monto: 4259595.12 },
+        { fecha: '26-Mar-26', concepto: '3ª Estimación',       monto: 4135338.51 },
+        { fecha: '17-Abr-26', concepto: '4ª Estimación',       monto: 4530200.15 },
     ];
 
     const gastoTipo = {
-        'Materiales':   112624.01 + 5781602.74 + 6009964.12 + 3833.80 + 231888,
-        'Mano de Obra': 344461.42 + 1922715.30 + 1800521.78 + 126570.01 + 306676.32,
-        'Indirectos':   386280.66 + 429962.92 + 1525198.34 + 155394.63 + 243300,
-        'Equipo':       95146.10 + 213437.21 + 141421.11 + 34730.40,
+        'Materiales':   112624.01 + 5781602.74 + 6817020.44 + 136945.27+ 3833.80 + 231888.00,
+        'Mano de Obra': 344461.42 + 1922715.30 + 2432353.85 + 49585.20 + 126570.01 + 306676.32,
+        'Indirectos':   386280.66 + 429962.92 + 1641888.39 + 155394.63 + 243300,
+        'Equipo':       95146.10 + 213437.21 + 217871.68 + 34730.40,
         'Herramienta':  14518 + 5254.28
     };
 
-    const periodos       = ['13/12','27/10','04/11','12/11','20/11','28/11','06/12','14/12','22/12','30/12','07/01','15/01','23/01','31/01','08/02','16/02','24/02','04/03','12/03','20/03','28/03','05/04',' 13/04'];
-    const gastoAcum      = [1156326.53, 1446397.47, 1758748.80, 2974562.40, 3163910.75, 3498108.91, 3802794.99, 5856564.45, 6139943.32, 6313283.58, 6927820.11, 9172975.33, 10847903.48, 12408837.54, 14665355.53, 15376137.58, 16519557.71, 18382198.83, 19238716.74, 20916925.97, 21415907.50, 21937745.1,24021841.54];
-    const presupuestoAcum= [0,0,0,0,0,0,40614,938879,2655068,5124517,6196871,7491868,9421613,13013506,13553083,14667320,16087155,18040237,20257734,22614164,25715825,28929389,32005450.30];
-    const estimadoAcum   = [0,1127512,2255025,3382538,4510051,5637564,6765077,7892590,9020102,10147615,11275128,12402641,13530154,14657667,15785180,16912693,18040205,19167718,21547186,23096903,24635943,25972150.90,27575602.62];
-    const pagadoAcum     = [4500237,4500237,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,19573684,19573684,19573684,27346583,27346583,27346583,27346583,27346583,31481921,31481921,31481921,36012121.96];
-
+    const periodos       = ['13/12','27/10','04/11','12/11','20/11','28/11','06/12','14/12','22/12','30/12','07/01','15/01','23/01','31/01','08/02','16/02','24/02','04/03','12/03','20/03','28/03','05/04','13/04','21/04','29/04','07/05'];
+    const gastoAcum      = [1156326.53, 1446397.47, 1758748.80, 2974562.40, 3163910.75, 3498108.91, 3802794.99, 5856564.45, 6139943.32, 6313283.58, 6927820.11, 9172975.33, 10847903.48, 12408837.54, 14665355.53, 15376137.58, 16519557.71, 18382198.83, 19238716.74, 20916925.97, 21415907.50, 21937745.1,24021841.54,25840401.02,25840401.02,28471787.02];
+    const presupuestoAcum= [0,0,0,0,0,0,40614,938879,2655068,5124517,6196871,7491868,9421613,13013506,13553083,14667320,16087155,18040237,20257734,22614164,25715825,28929389,32005450.30,34888227.05,37349889.37,39606903.85];
+    const estimadoAcum   = [0,1127512,2255025,3382538,4510051,5637564,6765077,7892590,9020102,10147615,11275128,12402641,13530154,14657667,15785180,16912693,18040205,19167718,21547186,23096903,24635943,25972150.90,27575602.62,27575602.62,27575602.62,32149521.56];
+    const pagadoAcum     = [4500237,4500237,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,19573684,19573684,19573684,27346583,27346583,27346583,31606178.42,35741516.93,35741516.93,35741516.93,40271717.08,402717717.08,40271717.08,40271717.08];
     const totalPres = partidas.reduce((s,p) => s + p.presupuesto, 0);
     const totalGasto = partidas.reduce((s,p) => s + p.gastado, 0);
     const totalPagado = pagos.reduce((s,p) => s + p.monto, 0);
