@@ -102,12 +102,12 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white leading-tight">Control de Obra · Rancho Santa Rosa</h1>
-                    <p class="text-xs" style="color:rgba(255,255,255,0.6);">Facultad de Veterinaria · CADELS · Estimación 4</p>
+                    <p class="text-xs" style="color:rgba(255,255,255,0.6);">Facultad de Veterinaria · CADELS · Estimación 10</p>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2">
-                <span class="header-badge"><i class="fas fa-calendar-check mr-1"></i>Corte: 15 MAy 2026</span>
-                <span class="header-badge"><i class="fas fa-file-invoice-dollar mr-1"></i>Estimación 4</span>
+                <span class="header-badge"><i class="fas fa-calendar-check mr-1"></i>Corte: 22 Sep 2026</span>
+                <span class="header-badge"><i class="fas fa-file-invoice-dollar mr-1"></i>12 pagos recibidos</span>
                 <span class="header-badge" id="badgeDias"></span>
             </div>
         </div>
@@ -118,7 +118,7 @@
         <!-- ═══════════════════ ALERT BANNER ═══════════════════ -->
         <div class="alert-strip rounded-2xl px-5 py-3 mb-6 flex flex-wrap items-center gap-3 fade-up">
             <i class="fas fa-info-circle text-white text-lg"></i>
-            <span class="text-white text-sm font-medium">Gasto real <strong id="alertPct">--</strong> del presupuesto · Flujo de caja positivo de <strong id="alertFlujo">--</strong> · SPI = <strong id="alertSPI">--</strong></span>
+            <span class="text-white text-sm font-medium">Gasto real <strong id="alertPct">--</strong> del presupuesto · <span id="alertFlujoTxt">Flujo de caja</span> <strong id="alertFlujo">--</strong> · SPI = <strong id="alertSPI">--</strong></span>
         </div>
 
         <!-- ═══════════════════ KPIs FILA 1 ═══════════════════ -->
@@ -141,7 +141,7 @@
             <div class="card card-hover p-5 fade-up delay-3">
                 <div class="kpi-label mb-2"><i class="fas fa-hand-holding-usd mr-1 text-amber-500"></i>Pagos Recibidos</div>
                 <div class="kpi-value text-amber-600 mono" id="kpiPagado">--</div>
-                <div class="text-xs text-gray-400 mt-2">Anticipos + 3 estimaciones</div>
+                <div class="text-xs text-gray-400 mt-2">Anticipos + estimaciones</div>
                 <div class="mt-3 pbar-track"><div class="pbar-fill bg-amber-400" id="barPagado" style="width:0%"></div></div>
             </div>
 
@@ -282,59 +282,65 @@
         </div>
 
         <div class="text-xs text-center text-gray-400 border-t pt-4 pb-2">
-            <i class="fas fa-database mr-1"></i> Datos basados en BASE DE DATOS y estimación de obra · Corte informativo 15 May 2026
-            &nbsp;·&nbsp; <i class="fas fa-code mr-1"></i> Dashboard V2.01
+            <i class="fas fa-database mr-1"></i> Datos basados en BASE DE DATOS y estimación de obra · Corte informativo 22 Sep 2026
+            &nbsp;·&nbsp; <i class="fas fa-code mr-1"></i> Dashboard V2.02
         </div>
     </main>
 
 <script>
 (function() {
     const INICIO_CONTRATO = new Date('2025-11-07');
-    const CORTE = new Date('2026-05-15');
+    const CORTE = new Date('2026-09-22');
     const PLAZO_DIAS = 265;
 
     const partidas = [
-        { nombre: "MEJORAMIENTO DE TERRENO",   presupuesto: 3741540.86,  gastado: 1618034.43,  avanceFisico: 1.00 },
-        { nombre: "CIMENTACIÓN",               presupuesto: 9205273.81,  gastado: 9624736.13,  avanceFisico: 1.00 },
-        { nombre: "ESTRUCTURA",                presupuesto: 19689751.20, gastado: 13325055.46,  avanceFisico: 0.785 },
-        { nombre: "ALBAÑILERÍA",               presupuesto: 7352953.24,  gastado: 422647.75,   avanceFisico: 0.3832 },
-        { nombre: "AZOTEA",                    presupuesto: 2956477.80,  gastado: 6164.26,     avanceFisico: 0.0139 },
-        { nombre: "ACABADOS",                  presupuesto: 10406582.52, gastado: 397263.77,   avanceFisico: 0.1350 },
-        { nombre: "INST. ELÉCTRICA",           presupuesto: 4586028.61,  gastado: 3833.80,     avanceFisico: 0.00 },
-        { nombre: "INST. HIDRÁULICA/SANITARIA",presupuesto: 2174274.41,  gastado: 10925.73,    avanceFisico: 0.0335 },
-        { nombre: "MUEBLES DE BAÑO",           presupuesto: 1165709.43,  gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "CANCELERÍA ALUMINIO",       presupuesto: 3177963.55,  gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "CARPINTERÍA",               presupuesto: 34412.51,    gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "HERRERÍA",                  presupuesto: 122116.78,   gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "MAMPARAS BAÑO",             presupuesto: 516790.35,   gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "CANALIZACIÓN VOZ/DATOS",    presupuesto: 981748.34,   gastado: 0,           avanceFisico: 0.00 },
-        { nombre: "LIMPIEZAS",                 presupuesto: 372224.15,   gastado: 19268.18,    avanceFisico: 0.3451 },
-        { nombre: "BODEGA / OTROS",            presupuesto: 0,           gastado: 1098559.36,  avanceFisico: 1.00 }
+        { nombre: "MEJORAMIENTO DE TERRENO", presupuesto: 3741670.12, gastado: 1618053.82, avanceFisico: 1 },
+        { nombre: "CIMENTACIÓN", presupuesto: 9366177.18, gastado: 9656788.64, avanceFisico: 1 },
+        { nombre: "ESTRUCTURA", presupuesto: 19689751.20, gastado: 24223406.52, avanceFisico: 1 },
+        { nombre: "ALBAÑILERÍA", presupuesto: 7352953.24, gastado: 10309264.07, avanceFisico: 1 },
+        { nombre: "AZOTEA", presupuesto: 2956477.80, gastado: 1110084.30, avanceFisico: 1 },
+        { nombre: "ACABADOS", presupuesto: 10406582.52, gastado: 8025245.35, avanceFisico: 1 },
+        { nombre: "INST. ELÉCTRICA", presupuesto: 4586028.61, gastado: 2902390.28, avanceFisico: 1 },
+        { nombre: "INST. HIDRÁULICA/SANITARIA", presupuesto: 2174274.41, gastado: 919040.99, avanceFisico: 1 },
+        { nombre: "MUEBLES DE BAÑO", presupuesto: 1165709.43, gastado: 916557.78, avanceFisico: 1 },
+        { nombre: "CANCELERÍA ALUMINIO", presupuesto: 3177963.55, gastado: 2926694.53, avanceFisico: 1 },
+        { nombre: "CARPINTERÍA", presupuesto: 34412.51, gastado: 1032.38, avanceFisico: 0.2 },
+        { nombre: "HERRERÍA", presupuesto: 122116.78, gastado: 370109.74, avanceFisico: 1 },
+        { nombre: "MAMPARAS BAÑO", presupuesto: 516790.35, gastado: 236332.03, avanceFisico: 1 },
+        { nombre: "CANALIZACIÓN VOZ/DATOS", presupuesto: 981748.34, gastado: 44178.68, avanceFisico: 0.3 },
+        { nombre: "LIMPIEZAS", presupuesto: 372224.15, gastado: 93206.62, avanceFisico: 1 },
+        { nombre: "EXTRAORDINARIOS", presupuesto: 0, gastado: 4275816.77, avanceFisico: 1.00 },
+        { nombre: "BODEGA / OTROS", presupuesto: 0, gastado: 1103559.36, avanceFisico: 1.00 }
     ];
 
     const pagos = [
-        { fecha: '07-Feb-25', concepto: '1er Pago Anticipo',   monto: 4500237.05 },
-        { fecha: '07-Nov-25', concepto: '1er Complemento',     monto: 8520100.00 },
-        { fecha: '15-Ene-26', concepto: '2do Complemento',     monto: 6553347.46 },
-        { fecha: '09-Feb-26', concepto: '1ª Estimación',       monto: 7772898.79 },
-        { fecha: '06-Mar-26', concepto: '2ª Estimación',       monto: 4259595.12 },
-        { fecha: '26-Mar-26', concepto: '3ª Estimación',       monto: 4135338.51 },
-        { fecha: '17-Abr-26', concepto: '4ª Estimación',       monto: 4530200.15 },
+        { fecha: '07-Feb-25', concepto: '1er Pago Anticipo', monto: 4500237.05 },
+        { fecha: '07-Nov-25', concepto: '1er Complemento', monto: 8520100.00 },
+        { fecha: '15-Ene-26', concepto: '2do Complemento', monto: 6553347.46 },
+        { fecha: '09-Feb-26', concepto: '1ª Estimación', monto: 7772898.79 },
+        { fecha: '06-Mar-26', concepto: '2ª Estimación', monto: 4259595.00 },
+        { fecha: '26-Mar-26', concepto: '3ª Estimación', monto: 4135339.00 },
+        { fecha: '17-Abr-26', concepto: '4ª Estimación', monto: 4530200.00 },
+        { fecha: '08-May-26', concepto: '6ª Estimación · Aulas y quirófanos', monto: 4850120.35 },
+        { fecha: '14-May-26', concepto: '7ª Estimación · Aulas y quirófanos', monto: 4235550.00 },
+        { fecha: '09-Jul-26', concepto: 'Pago (sin concepto en Excel)', monto: 6375015.01 },
+        { fecha: '17-Jul-26', concepto: '10ª Estimación · Laboratorios y quirófanos', monto: 4568603.14 },
+        { fecha: '31-Jul-26', concepto: 'Pago (sin concepto en Excel)', monto: 1526850.37 }
     ];
 
     const gastoTipo = {
-        'Materiales':   112624.01 + 5781602.74 + 6817020.44 + 136945.27+ 3833.80 + 231888.00,
-        'Mano de Obra': 344461.42 + 1922715.30 + 2432353.85 + 49585.20 + 126570.01 + 306676.32,
-        'Indirectos':   386280.66 + 429962.92 + 1641888.39 + 155394.63 + 243300,
-        'Equipo':       95146.10 + 213437.21 + 217871.68 + 34730.40,
-        'Herramienta':  14518 + 5254.28
+        'Materiales': 26986390.59,
+        'Mano de Obra': 22358451.08,
+        'Indirectos': 8197259.27,
+        'Equipo': 1267972.38,
+        'Herramienta': 32169.58
     };
 
-    const periodos       = ['13/12','27/10','04/11','12/11','20/11','28/11','06/12','14/12','22/12','30/12','07/01','15/01','23/01','31/01','08/02','16/02','24/02','04/03','12/03','20/03','28/03','05/04','13/04','21/04','29/04','07/05'];
-    const gastoAcum      = [1156326.53, 1446397.47, 1758748.80, 2974562.40, 3163910.75, 3498108.91, 3802794.99, 5856564.45, 6139943.32, 6313283.58, 6927820.11, 9172975.33, 10847903.48, 12408837.54, 14665355.53, 15376137.58, 16519557.71, 18382198.83, 19238716.74, 20916925.97, 21415907.50, 21937745.1,24021841.54,25840401.02,25840401.02,28471787.02];
-    const presupuestoAcum= [0,0,0,0,0,0,40614,938879,2655068,5124517,6196871,7491868,9421613,13013506,13553083,14667320,16087155,18040237,20257734,22614164,25715825,28929389,32005450.30,34888227.05,37349889.37,39606903.85];
-    const estimadoAcum   = [0,1127512,2255025,3382538,4510051,5637564,6765077,7892590,9020102,10147615,11275128,12402641,13530154,14657667,15785180,16912693,18040205,19167718,21547186,23096903,24635943,25972150.90,27575602.62,27575602.62,27575602.62,32149521.56];
-    const pagadoAcum     = [4500237,4500237,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,13020337,19573684,19573684,19573684,27346583,27346583,27346583,31606178.42,35741516.93,35741516.93,35741516.93,35741516.93,40271717.08,40271717.08,40271717.08,40271717.08];
+    const periodos       = ["13/12", "27/10", "04/11", "12/11", "20/11", "28/11", "06/12", "14/12", "22/12", "30/12", "07/01", "15/01", "23/01", "31/01", "08/02", "16/02", "24/02", "04/03", "12/03", "20/03", "28/03", "05/04", "13/04", "21/04", "29/04", "07/05", "15/05", "23/05", "31/05", "08/06", "16/06", "24/06", "02/07", "10/07", "18/07", "26/07", "03/08", "11/08", "19/08", "27/08", "04/09", "12/09", "20/09"];
+    const gastoAcum      = [1156326.53, 1446397.47, 1758748.80, 2974562.40, 3163910.75, 3498108.91, 3802794.99, 5856564.45, 6139943.32, 6313283.58, 6927820.11, 9172975.33, 10847903.48, 12408837.54, 14835502.42, 15546284.47, 16696704.60, 18559345.72, 19415863.63, 21094072.86, 21593054.39, 22055952.13, 24041020.43, 26001070.33, 26142560.76, 28230393.34, 32268002.14, 33427593.88, 37972627.76, 42202448.96, 44362456.30, 46315445.46, 48133376.00, 53539294.05, 55797475.90, 57668682.74, 59212498.38, 60279179.25, 61120321.06, 61559690.17, 62958732.75, 63650517.85, 63669557.85];
+    const presupuestoAcum= [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 40614.57, 938879.59, 2655068.06, 5124517.42, 6196871.77, 7491868.27, 9421613.33, 13013506.43, 13553083.60, 14667320.72, 16087155.92, 18040237.67, 20257734.27, 22614164.89, 25715825.99, 28929389.80, 32005450.30, 34888227.05, 37349889.37, 39606903.85, 41762561.92, 44116772.35, 46579735.41, 49091007.13, 51285503.37, 53977549.15, 56648317.48, 60167972.60, 63537987.93, 65245615.04, 65245615.04, 65245615.04, 65245615.04, 65245615.04, 65245615.04, 65245615.04, 65245615.04];
+    const estimadoAcum   = [0.00, 1127512.87, 2255025.74, 3382538.61, 4510051.48, 5637564.35, 6765077.23, 7892590.10, 9020102.97, 10147615.84, 11275128.71, 12402641.58, 13530154.45, 14657667.32, 15785180.19, 16912693.06, 18040205.93, 19167718.81, 21547186.81, 23096903.47, 24635943.66, 25579213.15, 26522482.65, 27465752.14, 28409021.64, 29352291.14, 30295560.63, 31238830.13, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63, 32182099.63];
+    const pagadoAcum     = [4500237.05, 4500237.05, 13020337.05, 13020337.05, 13020337.05, 13020337.05, 13020337.05, 13020337.05, 13020337.05, 13020337.05, 13020337.05, 19573684.51, 19573684.51, 19573684.51, 27346583.30, 27346583.30, 27346583.30, 31606178.30, 31606178.30, 35741517.30, 35741517.30, 35741517.30, 40271717.30, 40271717.30, 45121837.65, 49357387.65, 49357387.65, 49357387.65, 49357387.65, 49357387.65, 49357387.65, 49357387.65, 55732402.66, 60301005.80, 60301005.80, 61827856.17, 61827856.17, 61827856.17, 61827856.17, 61827856.17, 61827856.17, 61827856.17, 61827856.17];
     const totalPres = partidas.reduce((s,p) => s + p.presupuesto, 0);
     const totalGasto = partidas.reduce((s,p) => s + p.gastado, 0);
     const totalPagado = pagos.reduce((s,p) => s + p.monto, 0);
@@ -397,6 +403,7 @@
     document.getElementById('badgeDias').innerHTML = `<i class="fas fa-clock mr-1"></i>${diasTranscurridos} días de obra`;
     document.getElementById('alertPct').innerText = `${(totalGasto/totalPres*100).toFixed(1)}%`;
     document.getElementById('alertFlujo').innerText = fmtM(saldoCaja);
+    document.getElementById('alertFlujoTxt').innerText = saldoCaja >= 0 ? 'Flujo de caja positivo de' : 'Flujo de caja negativo de';
     document.getElementById('alertSPI').innerText = SPI !== null ? fmtIdx(SPI) : 'N/A';
     document.getElementById('evmPV').innerText = fmtM(PV);
     document.getElementById('evmEV').innerText = fmtM(EV);
@@ -428,7 +435,7 @@
 
     // Flujo de pagos
     const flujoList = document.getElementById('flujoList');
-    const colors = ['bg-blue-500','bg-blue-400','bg-indigo-500','bg-purple-500','bg-violet-500'];
+    const colors = ['bg-blue-500','bg-blue-400','bg-indigo-500','bg-purple-500','bg-violet-500','bg-fuchsia-500','bg-pink-500','bg-rose-500','bg-orange-500','bg-amber-500','bg-teal-500','bg-emerald-500'];
     pagos.forEach((p, i) => { flujoList.insertAdjacentHTML('beforeend', `<div class="flex items-center justify-between border-b pb-2 last:border-0"><div class="flex items-center gap-2"><div class="timeline-dot ${colors[i] || 'bg-gray-400'}"></div><div><div class="font-medium text-gray-700">${p.concepto}</div><div class="text-xs text-gray-400">${p.fecha}</div></div></div><span class="mono font-semibold">${fmtN(p.monto)}</span></div>`); });
     document.getElementById('flujoBanner').innerHTML = `<div class="flex justify-between items-center"><div><div class="text-xs font-bold text-gray-600 uppercase tracking-wide">Total Recibido</div><div class="text-xl font-bold mono text-emerald-700">${fmtN(totalPagado)}</div></div><div class="text-right"><div class="text-xs font-bold text-gray-600 uppercase tracking-wide">Saldo vs Gasto</div><div class="text-xl font-bold mono ${saldoCaja >= 0 ? 'text-emerald-600' : 'text-red-600'}">${saldoCaja >= 0 ? '+' : ''}${fmtN(saldoCaja)}</div></div></div>`;
 
